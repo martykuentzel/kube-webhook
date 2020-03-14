@@ -62,15 +62,22 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	p := []map[string]string{}
 	patch := map[string]string{}
 	for k, v := range secret.Data {
-		log.Debugf("key: %s, value: *** found.", k)
-		if strings.HasPrefix(string(v), "secman") {
+		log.Info("key: %s, value: *** found.", k)
 
-			log.Infof("Mutating ns/sercet/key `%s/%s/%s`. ", secret.Namespace, secret.Name, k)
+		if strings.HasPrefix(string(v), "secman:") {
 
-			retrievedSecret, err := crypto.GetSecret(ctx, secret.Name)
+			secManKey := strings.TrimPrefix(string(v), "secman:")
+			log.Infof("Mutating ns/sercet/key `%s/%s/%s with key %s`. ", secret.Namespace, secret.Name, k, secManKey)
+
+			retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
 
 			if err != nil {
-				log.Errorf("Cannot retrieve secret from SecretManager: %v", err)
+				log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s/%s/%s` will not be muatated.", secret.Namespace, secret.Name, k)
+				patch = map[string]string{
+					"op":    "replace",
+					"path":  fmt.Sprintf("/data/%s", k),
+					"value": base64.StdEncoding.EncodeToString(v),
+				}
 			} else {
 				patch = map[string]string{
 					"op":    "replace",

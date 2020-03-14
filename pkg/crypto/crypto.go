@@ -15,7 +15,7 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 	// Create the client.
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		log.Errorf("failed to setup client: %v", err)
+		log.Errorf("failed to create secretmanager client: %v", err)
 		return nil, err
 	}
 	// Build the request.
