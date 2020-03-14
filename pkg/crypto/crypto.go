@@ -11,7 +11,6 @@ import (
 // GetSecret retrieves the content of an object
 func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 
-	log.Printf("key:", key)
 	// Create the client.
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {

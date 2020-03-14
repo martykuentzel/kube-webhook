@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.JSONFormatter{})
 }
 
