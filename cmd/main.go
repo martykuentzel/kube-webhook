@@ -9,11 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func init() {
-	log.SetLevel(log.InfoLevel)
-	log.SetFormatter(&log.JSONFormatter{})
-}
-
 func handleMutate(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Start mutating ...")
@@ -22,7 +17,7 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		log.Error("Cannot retrieve the body of the AdmissionReview request.%v", err)
+		log.Errorf("Cannot retrieve the body of the AdmissionReview request.%v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -43,6 +38,9 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.JSONFormatter{})
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", handleMutate)

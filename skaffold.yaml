@@ -1,0 +1,12 @@
+apiVersion: skaffold/v2beta1
+kind: Config
+metadata:
+  name: k-s-mutate-webhook
+build:
+  artifacts:
+  - image: 3236527/k8s-mutate-webhook
+deploy:
+  kubectl:
+    manifests:
+    - deploy/webhook.yaml
+    - test_secret.yaml

@@ -40,7 +40,6 @@ don't forget to update `IMAGE_PREFIX` in the Makefile or set it when running `ma
 
 ### images
 
-[`alexleonhardt/k8s-mutate-webhook`](https://cloud.docker.com/repository/docker/alexleonhardt/k8s-mutate-webhook)
 
 
 
@@ -48,9 +47,6 @@ don't forget to update `IMAGE_PREFIX` in the Makefile or set it when running `ma
 
 useful during devving ... 
 
-```
-watcher -watch github.com/alex-leonhardt/k8s-mutate-webhook -run github.com/alex-leonhardt/k8s-mutate-webhook/cmd/
-```
 
 ## kudos
 

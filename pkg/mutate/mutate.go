@@ -26,7 +26,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	// unmarshal request into AdmissionReview struct
 	admReview := v1beta1.AdmissionReview{}
 	if err := json.Unmarshal(body, &admReview); err != nil {
-		log.Errorf("unmarshaling request failed with %v", err)
+		log.Errorf("Unmarshaling request failed with %v", err)
 		return nil, err
 	}
 
@@ -38,12 +38,12 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	resp := v1beta1.AdmissionResponse{}
 
 	if ar == nil {
-		return responseBody, errors.New("admissionReview.Request is empty")
+		return responseBody, errors.New("AdmissionReview.Request is empty")
 	}
 
 	// get the Secret object and unmarshal it into its struct
 	if err := json.Unmarshal(ar.Object.Raw, &secret); err != nil {
-		log.Errorf("unable unmarshal secret json object %v", err)
+		log.Errorf("Unable unmarshal secret json object %v", err)
 		return nil, err
 	}
 	// set response options
@@ -62,7 +62,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	p := []map[string]string{}
 	patch := map[string]string{}
 	for k, v := range secret.Data {
-		log.Debugf("key: %s, value: %s found.", k, v)
+		log.Debugf("key: %s, value: %s found", k, v)
 
 		if strings.HasPrefix(string(v), "secman:") {
 
@@ -74,7 +74,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 			retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
 
 			if err != nil {
-				log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s/%s/%s` will not be muatated.", secret.Namespace, secret.Name, k)
+				log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s/%s/%s` will not be muatated", secret.Namespace, secret.Name, k)
 				patch = map[string]string{
 					"op":    "replace",
 					"path":  fmt.Sprintf("/data/%s", k),
