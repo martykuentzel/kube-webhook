@@ -19,7 +19,7 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 	}
 	// Build the request.
 	accessRequest := &secretspb.AccessSecretVersionRequest{
-		Name: "projects/776241680340/secrets/tester/versions/1",
+		Name: key,
 	}
 
 	// Call the API.

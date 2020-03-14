@@ -66,7 +66,9 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
 		if strings.HasPrefix(string(v), "secman:") {
 
-			secManKey := strings.TrimPrefix(string(v), "secman:")
+			secManKeyRaw := strings.TrimPrefix(string(v), "secman:")
+			secManKey := strings.TrimRight(secManKeyRaw, "\n")
+
 			log.Infof("Mutating '%s/%s/%s' with secManKey '%s'.", secret.Namespace, secret.Name, k, secManKey)
 
 			retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
