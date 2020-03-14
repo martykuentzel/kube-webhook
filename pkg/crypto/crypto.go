@@ -15,7 +15,8 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 	// Create the client.
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		log.Fatal("failed to setup client: %v", err)
+		log.Errorf("failed to setup client: %v", err)
+		return nil, err
 	}
 	// Build the request.
 	accessRequest := &secretspb.AccessSecretVersionRequest{
@@ -25,7 +26,8 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 	// Call the API.
 	result, err := client.AccessSecretVersion(ctx, accessRequest)
 	if err != nil {
-		log.Fatalf("failed to access secret version: %v", err)
+		log.Errorf("failed to access secret version: %v", err)
+		return nil, err
 	}
 
 	log.Printf("Plaintext: %s", result.Payload.Data)

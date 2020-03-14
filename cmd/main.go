@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"html"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -13,14 +11,7 @@ import (
 
 func init() {
 	log.SetLevel(log.InfoLevel)
-	log.SetFormatter(&log.TextFormatter{
-		FullTimestamp: true,
-	})
-}
-
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	log.Infof("Handleroot was called")
-	fmt.Fprintf(w, "hello %q", html.EscapeString(r.URL.Path))
+	log.SetFormatter(&log.JSONFormatter{})
 }
 
 func handleMutate(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +45,6 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("/", handleRoot)
 	mux.HandleFunc("/mutate", handleMutate)
 
 	s := &http.Server{

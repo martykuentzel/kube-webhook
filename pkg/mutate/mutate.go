@@ -26,7 +26,8 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	// unmarshal request into AdmissionReview struct
 	admReview := v1beta1.AdmissionReview{}
 	if err := json.Unmarshal(body, &admReview); err != nil {
-		return nil, log.Errorf("unmarshaling request failed with %s", err)
+		log.Errorf("unmarshaling request failed with %v", err)
+		return nil, err
 	}
 
 	var err error
@@ -42,7 +43,8 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
 	// get the Secret object and unmarshal it into its struct
 	if err := json.Unmarshal(ar.Object.Raw, &secret); err != nil {
-		return nil, log.Errorf("unable unmarshal secret json object %v", err)
+		log.Errorf("unable unmarshal secret json object %v", err)
+		return nil, err
 	}
 	// set response options
 	resp.Allowed = true
@@ -86,7 +88,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	// parse the []map into JSON
 	resp.Patch, err = json.Marshal(p)
 	if err != nil {
-		log.Errorf("Cannot parse []map into Json: %s", err)
+		log.Errorf("Cannot parse []map into Json: %v", err)
 		return nil, err
 	}
 
