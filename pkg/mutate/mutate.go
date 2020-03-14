@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MartyKuentzel/kube-webhook/pkg/crypto"
+	crypto "github.com/MartyKuentzel/kube-webhook/pkg/crypto"
 	log "github.com/sirupsen/logrus"
 
 	v1beta1 "k8s.io/api/admission/v1beta1"
@@ -21,12 +21,12 @@ import (
 // Mutate mutates
 func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
-	log.Debugf("recv: %s\n", string(body))
+	log.Debugf("received Request: %s\n", string(body))
 
 	// unmarshal request into AdmissionReview struct
 	admReview := v1beta1.AdmissionReview{}
 	if err := json.Unmarshal(body, &admReview); err != nil {
-		return nil, fmt.Errorf("unmarshaling request failed with %s", err)
+		return nil, log.Errorf("unmarshaling request failed with %s", err)
 	}
 
 	var err error
@@ -42,7 +42,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
 	// get the Secret object and unmarshal it into its struct
 	if err := json.Unmarshal(ar.Object.Raw, &secret); err != nil {
-		return nil, fmt.Errorf("unable unmarshal secret json object %v", err)
+		return nil, log.Errorf("unable unmarshal secret json object %v", err)
 	}
 	// set response options
 	resp.Allowed = true
@@ -85,6 +85,10 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	}
 	// parse the []map into JSON
 	resp.Patch, err = json.Marshal(p)
+	if err != nil {
+		log.Errorf("Cannot parse []map into Json: %s", err)
+		return nil, err
+	}
 
 	// Success, of course ;)
 	resp.Result = &metav1.Status{

@@ -2,9 +2,9 @@ package crypto
 
 import (
 	"context"
-	"log"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1beta1"
+	log "github.com/sirupsen/logrus"
 	secretspb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1beta1"
 )
 
@@ -15,7 +15,7 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 	// Create the client.
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		log.Fatalf("failed to setup client: %v", err)
+		log.Fatal("failed to setup client: %v", err)
 	}
 	// Build the request.
 	accessRequest := &secretspb.AccessSecretVersionRequest{

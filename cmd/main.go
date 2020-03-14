@@ -11,22 +11,28 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func init() {
+	log.SetLevel(log.InfoLevel)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+}
+
 func handleRoot(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handleroot was called \n")
+	log.Infof("Handleroot was called")
 	fmt.Fprintf(w, "hello %q", html.EscapeString(r.URL.Path))
 }
 
 func handleMutate(w http.ResponseWriter, r *http.Request) {
 
-	log.Debugf("Start mutating ...")
+	log.Info("Start mutating ...")
 
 	// read the body / request
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		log.Errorf("Cannot retrieve the body of the AdmissionReview request.%v", err)
+		log.Error("Cannot retrieve the body of the AdmissionReview request.%v", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "%s", err)
 		return
 	}
 
@@ -35,7 +41,6 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorf("Mutation failed.\n%v.", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "%s", err)
 		return
 	}
 
@@ -43,8 +48,7 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(mutated)
 
-	log.Debugf("Mutation over.")
-
+	log.Debug("Mutation over.")
 }
 
 func main() {
@@ -62,7 +66,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20, // 1048576
 	}
 
-	log.Printf("Listening on port: %s\n", s.Addr)
+	log.Infof("Listening on port: %s", s.Addr)
 	log.Fatal(s.ListenAndServeTLS("./ssl/mutateme.pem", "./ssl/mutateme.key"))
 
 }
