@@ -1,14 +1,14 @@
-#! /bin/sh
+#!/bin/bash
 set -o errexit
 
 export APP="${1:-mutateme}"
 export NAMESPACE="${2:-default}"
 export CSR_NAME="${APP}.${NAMESPACE}.svc"
 
-echo "... creating ${app}.key"
+echo "... creating ${APP}.key"
 openssl genrsa -out ${APP}.key 2048
 
-echo "... creating ${app}.csr"
+echo "... creating ${APP}.csr"
 cat >csr.conf<<EOF
 [req]
 req_extensions = v3_req
@@ -81,6 +81,7 @@ while true; do
   sleep 2
 done
 
-echo "... creating ${app}.pem cert file"
+echo "... creating ${APP}.pem cert file"
 echo "\$serverCert | openssl base64 -d -A -out ${APP}.pem"
 echo ${serverCert} | openssl base64 -d -A -out ${APP}.pem
+

@@ -7,7 +7,7 @@ RUN apk add git make openssl
 
 WORKDIR /go/src/github.com/alex-leonhardt/k8s-mutate-webhook
 ADD . .
-RUN make test
+#RUN make test
 RUN make app
 
 FROM alpine
