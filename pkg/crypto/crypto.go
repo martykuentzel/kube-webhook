@@ -30,6 +30,5 @@ func GetSecret(ctx context.Context, key string) (encSecret []byte, err error) {
 		return nil, err
 	}
 
-	log.Printf("Plaintext: %s", result.Payload.Data)
 	return result.Payload.Data, err
 }

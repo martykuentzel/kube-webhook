@@ -62,12 +62,12 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	p := []map[string]string{}
 	patch := map[string]string{}
 	for k, v := range secret.Data {
-		log.Info("key: %s, value: *** found.", k)
+		log.Debugf("key: %s, value: %s found.", k, v)
 
 		if strings.HasPrefix(string(v), "secman:") {
 
 			secManKey := strings.TrimPrefix(string(v), "secman:")
-			log.Infof("Mutating ns/sercet/key `%s/%s/%s with key %s`. ", secret.Namespace, secret.Name, k, secManKey)
+			log.Infof("Mutating '%s/%s/%s' with secManKey '%s'.", secret.Namespace, secret.Name, k, secManKey)
 
 			retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
 
@@ -89,7 +89,7 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 			p = append(p, patch)
 
 		}
-		//for deeper debugging :), don't use it in prod
+		//for deeper debugging, don't use it in prod
 		log.Debugf("patch: %v", p)
 	}
 	// parse the []map into JSON
@@ -99,7 +99,6 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// Success, of course ;)
 	resp.Result = &metav1.Status{
 		Status: "Success",
 	}
@@ -112,6 +111,6 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	log.Printf("resp: %s\n", string(responseBody))
+	log.Debugf("resp: %s\n", string(responseBody))
 	return responseBody, nil
 }
