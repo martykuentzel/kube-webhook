@@ -22,7 +22,7 @@ import (
 // Mutate mutating Admission Request
 func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
-	log.Debugf("received Request: %s\n", string(body))
+	log.Debugf("Received Request: %s\n", string(body))
 
 	var err error
 	var secret *corev1.Secret

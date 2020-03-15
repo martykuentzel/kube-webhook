@@ -1,42 +1,22 @@
 # k8s-mutate-webhook
 
-A playground to try build a crude k8s mutating webhook; the goal is to mutate a Pod CREATE request to _always_ use a debian image and by doing this, learning more about
-the k8s api, objects, etc. - eventually figure out how scalable this is (could be made) if one had 1000 pods to schedule (concurrently) 
+A Webhook that connects to SecretManager and mutates secrets.
 
-## build 
+## Setup
 
+# Prerequisites for GCP Project
+
+- enable KMS API
+- enable Secret Manager API
+- create Service Account for SecMan
+- give Service Account Secret Manager Secret Accessor Role
+- make sure your Kubernetes Cluster has Workload Identity enabled
+- create IAM Binding for GCP Service Account and K8S Service Account
 ```
-make
+gcloud iam service-accounts add-iam-policy-binding \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:YOUR_PROJECT.svc.id.goog[YOUR_NAMESPACE/YOUR_K8S_SA]" \
+  YOUR_GCP_SA@YOUR_PROJECT.iam.gserviceaccount.com
 ```
+- in Case you use a private GKE Cluster edit the firewall for the GKE-Master rule and add port 8443 (next to 443 and 10250)
 
-## test
-
-```
-make test
-```
-
-## docker
-
-to create a docker image .. 
-
-```
-make docker
-```
-
-it'll be tagged with the current git commit (short `ref`) and `:latest`
-
-don't forget to update `IMAGE_PREFIX` in the Makefile or set it when running `make`
-
-### images
-
-
-
-
-## watcher
-
-useful during devving ... 
-
-
-## kudos
-
-- [https://github.com/morvencao/kube-mutating-webhook-tutorial](https://github.com/morvencao/kube-mutating-webhook-tutorial)
