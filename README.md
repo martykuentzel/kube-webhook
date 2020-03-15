@@ -15,17 +15,6 @@ make
 make test
 ```
 
-## ssl/tls
-
-the `ssl/` dir contains a script to create a self-signed certificate, not sure this will even work when running in k8s but that's part of figuring this out I guess
-
-_NOTE: the app expects the cert/key to be in `ssl/` dir relative to where the app is running/started and currently is hardcoded to `mutateme.{key,pem}`_
-
-```
-cd ssl/ 
-make 
-```
-
 ## docker
 
 to create a docker image .. 
