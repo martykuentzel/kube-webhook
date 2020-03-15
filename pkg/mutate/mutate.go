@@ -101,7 +101,7 @@ func replaceSecManKey(ctx context.Context, secretKey string, secretValueRaw []by
 			"value": base64.StdEncoding.EncodeToString(secretValueRaw),
 		}
 	} else {
-		log.Debugf("Secret could be successfully retrieved from Secret Manager")
+		log.Debugf("Secret with secManKey %s could be successfully retrieved from Secret Manager", secManKey)
 		patch = map[string]string{
 			"op":    "replace",
 			"path":  fmt.Sprintf("/data/%s", secretKey),
@@ -111,6 +111,7 @@ func replaceSecManKey(ctx context.Context, secretKey string, secretValueRaw []by
 	return patch
 }
 
+// build Response for Admission Review Response
 func responseCreator(secretPatch []map[string]string, UID types.UID) (v1beta1.AdmissionResponse, error) {
 
 	log.Debug("Creating Response")
