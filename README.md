@@ -4,7 +4,7 @@ A Webhook that connects to SecretManager and mutates secrets.
 
 ## Setup
 
-# Prerequisites for GCP Project
+### Prerequisites for GCP Project
 
 - enable KMS API
 - enable Secret Manager API

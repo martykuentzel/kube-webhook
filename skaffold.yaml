@@ -9,4 +9,4 @@ deploy:
   kubectl:
     manifests:
     - deploy/webhook.yaml
-    - test_secret.yaml
+    - example/test_secret.yaml
