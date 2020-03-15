@@ -16,27 +16,26 @@ import (
 	v1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-// Mutate mutates
+// Mutate mutating Admission Request
 func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 
 	log.Debugf("received Request: %s\n", string(body))
 
+	var err error
+	var secret *corev1.Secret
+
 	// unmarshal request into AdmissionReview struct
 	admReview := v1beta1.AdmissionReview{}
-	if err := json.Unmarshal(body, &admReview); err != nil {
+	if err = json.Unmarshal(body, &admReview); err != nil {
 		log.Errorf("Unmarshaling request failed with %v", err)
 		return nil, err
 	}
 
-	var err error
-	var secret *corev1.Secret
-
 	responseBody := []byte{}
 	ar := admReview.Request
-	resp := v1beta1.AdmissionResponse{}
-
 	if ar == nil {
 		return responseBody, errors.New("AdmissionReview.Request is empty")
 	}
@@ -46,63 +45,12 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 		log.Errorf("Unable unmarshal secret json object %v", err)
 		return nil, err
 	}
-	// set response options
-	resp.Allowed = true
-	resp.UID = ar.UID
-	pT := v1beta1.PatchTypeJSONPatch
-	resp.PatchType = &pT
 
-	// add some audit annotations
-	resp.AuditAnnotations = map[string]string{
-		"kube-secman": "mutated",
-	}
-
-	// the actual mutation is done by a string in JSONPatch style, i.e. we don't _actually_ modify the object, but
-	// tell K8S how it should modifiy it
-	p := []map[string]string{}
-	patch := map[string]string{}
-	for k, v := range secret.Data {
-		log.Debugf("key: %s, value: %s found", k, v)
-
-		if strings.HasPrefix(string(v), "secman:") {
-
-			secManKeyRaw := strings.TrimPrefix(string(v), "secman:")
-			secManKey := strings.TrimRight(secManKeyRaw, "\n")
-
-			log.Infof("Mutating '%s/%s/%s' with secManKey '%s'.", secret.Namespace, secret.Name, k, secManKey)
-
-			retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
-
-			if err != nil {
-				log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s/%s/%s` will not be muatated", secret.Namespace, secret.Name, k)
-				patch = map[string]string{
-					"op":    "replace",
-					"path":  fmt.Sprintf("/data/%s", k),
-					"value": base64.StdEncoding.EncodeToString(v),
-				}
-			} else {
-				patch = map[string]string{
-					"op":    "replace",
-					"path":  fmt.Sprintf("/data/%s", k),
-					"value": base64.StdEncoding.EncodeToString([]byte(retrievedSecret)),
-				}
-			}
-
-			p = append(p, patch)
-
-		}
-		//for deeper debugging, don't use it in prod
-		log.Debugf("patch: %v", p)
-	}
-	// parse the []map into JSON
-	resp.Patch, err = json.Marshal(p)
+	p := patchSecrets(ctx, secret)
+	resp, err := responseCreator(p, ar.UID)
 	if err != nil {
-		log.Errorf("Cannot parse []map into Json: %v", err)
+		log.Errorf("Creation of response failed")
 		return nil, err
-	}
-
-	resp.Result = &metav1.Status{
-		Status: "Success",
 	}
 
 	admReview.Response = &resp
@@ -110,9 +58,88 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 	// w/o needing to convert things in the http handler
 	responseBody, err = json.Marshal(admReview)
 	if err != nil {
+		log.Errorf("Cannot parse admReview []map into Json: %v", err)
 		return nil, err
 	}
 
 	log.Debugf("resp: %s\n", string(responseBody))
 	return responseBody, nil
+}
+
+// loop through secret values, check for "secman:" prefix and create map of patches
+func patchSecrets(ctx context.Context, secret *corev1.Secret) []map[string]string {
+
+	p := []map[string]string{}
+	patch := map[string]string{}
+	for k, v := range secret.Data {
+		log.Debugf("key: %s, value: %s found", k, v)
+
+		if strings.HasPrefix(string(v), "secman:") {
+			log.Infof("Mutating '%s/%s/%s'.", secret.Namespace, secret.Name, k)
+			patch = replaceSecManKey(ctx, k, v)
+			p = append(p, patch)
+		}
+
+	}
+	log.Debugf("Created following patch: %v", p)
+	return p
+}
+
+// the actual mutation is done by a string in JSONPatch style
+func replaceSecManKey(ctx context.Context, secretKey string, secretValueRaw []byte) map[string]string {
+
+	secManKey := trimKey(secretValueRaw)
+	log.Infof("Retrieving Secret for secManKey '%s'", secManKey)
+	retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
+
+	patch := map[string]string{}
+	if err != nil {
+		log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s` will not be muatated", secretKey)
+		patch = map[string]string{
+			"op":    "replace",
+			"path":  fmt.Sprintf("/data/%s", secretKey),
+			"value": base64.StdEncoding.EncodeToString(secretValueRaw),
+		}
+	} else {
+		log.Debugf("Secret could be successfully retrieved from Secret Manager")
+		patch = map[string]string{
+			"op":    "replace",
+			"path":  fmt.Sprintf("/data/%s", secretKey),
+			"value": base64.StdEncoding.EncodeToString([]byte(retrievedSecret)),
+		}
+	}
+	return patch
+}
+
+func responseCreator(secretPatch []map[string]string, UID types.UID) (v1beta1.AdmissionResponse, error) {
+
+	log.Debug("Creating Response")
+	var err error
+
+	resp := v1beta1.AdmissionResponse{}
+	resp.Allowed = true
+	resp.UID = UID
+	pT := v1beta1.PatchTypeJSONPatch
+	resp.PatchType = &pT
+	resp.Patch, err = json.Marshal(secretPatch)
+	if err != nil {
+		log.Errorf("Cannot parse secret patch []map into Json: %v", err)
+		return resp, err
+	}
+	resp.AuditAnnotations = map[string]string{
+		"kube-secman": "mutated",
+	}
+	resp.Result = &metav1.Status{
+		Status: "Success",
+	}
+	log.Debug("Response successfully created")
+	return resp, nil
+}
+
+func trimKey(secretValueRaw []byte) string {
+
+	secManKeyRaw := strings.TrimPrefix(string(secretValueRaw), "secman:")
+	secManKey := strings.TrimRight(secManKeyRaw, "\n")
+
+	return secManKey
 }
