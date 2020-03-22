@@ -11,6 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// the actual mutation is done by a string in JSONPatch style
 func patchSecrets(ctx context.Context, secret *corev1.Secret, v vault.VaultClient) []map[string]string {
 
 	secManEntries := findAllSecManEntries(secret.Data)
@@ -39,19 +40,19 @@ func hasSecManPrefix(s string) bool {
 	return false
 }
 
-// the actual mutation is done by a string in JSONPatch style
+// Placeholder called 'secManAddr' will be replaced with secret, if the value points to an actual key
 func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntries map[string]string) []map[string]string {
 
 	pp := []map[string]string{}
 
 	for k, v := range secManEntries {
 		secManAddr := removeSecManPrefix(v)
-		log.Infof("Retrieving Secret for Placeholder '%s'", secManAddr)
+		log.Infof("Retrieving Secret for Placeholder: '%s'", secManAddr)
 		retrievedSecret, err := vault.GetSecret(ctx, secManAddr)
 
 		patch := map[string]string{}
 		if err != nil {
-			log.Errorf("Because secret cannot be retrieved from SecretManager the Placeholder `%s` will not be muatated", v)
+			log.Errorf("Because Secret cannot be retrieved from SecretManager the Placeholder `%s` will not be muatated", v)
 			patch = createPatch(k, []byte(v))
 			pp = append(pp, patch)
 		} else {
@@ -71,7 +72,6 @@ func removeSecManPrefix(secretValueRaw string) string {
 }
 
 func createPatch(secretKey string, secretValue []byte) map[string]string {
-
 	patch := map[string]string{
 		"op":    "replace",
 		"path":  fmt.Sprintf("/data/%s", secretKey),

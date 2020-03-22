@@ -9,7 +9,7 @@ import (
 	secretspb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1beta1"
 )
 
-// VaultClient bladsds
+// VaultClient can access Secrets based on Struct that implements it
 type VaultClient interface {
 	GetSecret(context.Context, string) ([]byte, error)
 }
@@ -18,7 +18,7 @@ type secretManager struct {
 	client *secretmanagerSDK.Client
 }
 
-// GetSecret retrieves the content of an SecretManager Key
+// GetSecret retrieves the content of a SecretManager Key
 func (sM secretManager) GetSecret(ctx context.Context, secHookAddr string) ([]byte, error) {
 
 	// Build the request.
