@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MartyKuentzel/kube-webhook/pkg/mutate"
+	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,8 +23,15 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// mutate the request
-	mutated, err := mutate.Mutate(r.Context(), body)
+	// mutate the request with vault client
+	vault, err := vault.New(r.Context())
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	mutated, err := mutate.Mutate(r.Context(), body, vault)
 	if err != nil {
 		log.Errorf("Mutation failed.\n%v.", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -34,7 +42,7 @@ func handleMutate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(mutated)
 
-	log.Debug("Mutation over.")
+	log.Debug("...Mutation over.")
 }
 
 func main() {
@@ -55,5 +63,4 @@ func main() {
 
 	log.Infof("Listening on port: %s", s.Addr)
 	log.Fatal(s.ListenAndServeTLS("./ssl/mutateme.pem", "./ssl/mutateme.key"))
-
 }

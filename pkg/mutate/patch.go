@@ -6,59 +6,76 @@ import (
 	"fmt"
 	"strings"
 
-	crypto "github.com/MartyKuentzel/kube-webhook/pkg/crypto"
+	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// loop through secret values, check for "secman:" prefix and create map of patches
-func secretPatch(ctx context.Context, secret *corev1.Secret) []map[string]string {
+func patchSecrets(ctx context.Context, secret *corev1.Secret, v vault.VaultClient) []map[string]string {
 
-	p := []map[string]string{}
-	patch := map[string]string{}
-	for k, v := range secret.Data {
-		log.Debugf("key: %s, value: %s found", k, v)
-
-		if strings.HasPrefix(string(v), "secman:") {
-			log.Infof("Mutating '%s/%s/%s'.", secret.Namespace, secret.Name, k)
-			patch = replaceSecManKey(ctx, k, v)
-			p = append(p, patch)
-		}
-
-	}
-	log.Debugf("Created following patch: %v", p)
-	return p
-}
-
-// the actual mutation is done by a string in JSONPatch style
-func replaceSecManKey(ctx context.Context, secretKey string, secretValueRaw []byte) map[string]string {
-
-	secManKey := trimKey(secretValueRaw)
-	log.Infof("Retrieving Secret for secManKey '%s'", secManKey)
-	retrievedSecret, err := crypto.GetSecret(ctx, secManKey)
-
-	patch := map[string]string{}
-	if err != nil {
-		log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s` will not be muatated", secretKey)
-		patch = map[string]string{
-			"op":    "replace",
-			"path":  fmt.Sprintf("/data/%s", secretKey),
-			"value": base64.StdEncoding.EncodeToString(secretValueRaw),
-		}
-	} else {
-		log.Debugf("Secret with secManKey %s could be successfully retrieved from Secret Manager", secManKey)
-		patch = map[string]string{
-			"op":    "replace",
-			"path":  fmt.Sprintf("/data/%s", secretKey),
-			"value": base64.StdEncoding.EncodeToString([]byte(retrievedSecret)),
-		}
-	}
+	secManEntries := findAllSecManEntries(secret.Data)
+	patch := replaceSecManVals(ctx, v, secManEntries)
+	log.Debugf("Created following patch: %v", patch)
 	return patch
 }
 
-func trimKey(secretValueRaw []byte) string {
+func findAllSecManEntries(secretContent map[string][]byte) map[string]string {
 
-	secManKeyRaw := strings.TrimPrefix(string(secretValueRaw), "secman:")
-	secManKey := strings.TrimRight(secManKeyRaw, "\n")
-	return secManKey
+	ss := map[string]string{}
+	for k, v := range secretContent {
+		if hasSecManPrefix(string(v)) {
+			log.Debugf("key: %s, value: %s found", k, v)
+			ss[k] = string(v)
+		}
+	}
+	return ss
+}
+
+func hasSecManPrefix(s string) bool {
+	s1 := strings.TrimSpace(s)
+	if strings.HasPrefix(s1, "secman:") {
+		return true
+	}
+	return false
+}
+
+// the actual mutation is done by a string in JSONPatch style
+func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntries map[string]string) []map[string]string {
+
+	pp := []map[string]string{}
+
+	for k, v := range secManEntries {
+		secManAddr := removeSecManPrefix(v)
+		log.Infof("Retrieving Secret for secManAddr '%s'", secManAddr)
+		retrievedSecret, err := vault.GetSecret(ctx, secManAddr)
+
+		patch := map[string]string{}
+		if err != nil {
+			log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s` will not be muatated", v)
+			patch = createPatch(k, []byte(v))
+			pp = append(pp, patch)
+		} else {
+			log.Debugf("Secret with secManAddr %s could be successfully retrieved from Secret Manager", secManAddr)
+			patch = createPatch(k, retrievedSecret)
+			pp = append(pp, patch)
+		}
+	}
+	return pp
+}
+
+func removeSecManPrefix(secretValueRaw string) string {
+	s1 := strings.TrimSpace(secretValueRaw)
+	s2 := strings.TrimPrefix(s1, "secman:")
+	secManAddr := strings.TrimSpace(s2)
+	return secManAddr
+}
+
+func createPatch(secretKey string, secretValue []byte) map[string]string {
+
+	patch := map[string]string{
+		"op":    "replace",
+		"path":  fmt.Sprintf("/data/%s", secretKey),
+		"value": base64.StdEncoding.EncodeToString(secretValue),
+	}
+	return patch
 }

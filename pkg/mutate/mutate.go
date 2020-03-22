@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
-
 	v1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,9 +16,11 @@ import (
 )
 
 // Mutate receives AdmissionReview and responds with mutated AdmissionReview
-func Mutate(ctx context.Context, body []byte) ([]byte, error) {
+func Mutate(ctx context.Context, body []byte, v vault.VaultClient) ([]byte, error) {
 
 	log.Debugf("Received Request: %s\n", string(body))
+
+	log.Info("####BODY:_", string(body))
 
 	admReview := v1beta1.AdmissionReview{}
 	if err := json.Unmarshal(body, &admReview); err != nil {
@@ -38,8 +40,8 @@ func Mutate(ctx context.Context, body []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	p := secretPatch(ctx, secret)
-	JSONPatch, err := json.Marshal(p)
+	patch := patchSecrets(ctx, secret, v)
+	JSONPatch, err := json.Marshal(patch)
 	if err != nil {
 		log.Errorf("Cannot parse secret patch []map into Json: %v", err)
 		return nil, err

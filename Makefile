@@ -26,13 +26,13 @@ kind:
 	kind create cluster --config kind.yaml
 
 deploy:
-	kubectl apply -f deploy/
+	kubectl apply -f deploy/webhook.yaml
 
 reset:
-	kubectl delete -f deploy/
-	kubectl apply -f deploy/
+	kubectl delete -f deploy/webhook.yaml
+	kubectl apply -f deploy/webhook.yaml
 
 delete:
-	kubectl delete -f deploy/
+	kubectl delete -f deploy/webhook.yaml
 
 .PHONY: docker push kind deploy reset
