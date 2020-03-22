@@ -20,3 +20,7 @@ gcloud iam service-accounts add-iam-policy-binding \
 ```
 - in Case you use a private GKE Cluster edit the firewall for the GKE-Master rule and add port 8443 (next to 443 and 10250)
 
+### Running Kubernetes Cluster
+```
+k label namespace default mutateme=enabled --overwrite=true
+```

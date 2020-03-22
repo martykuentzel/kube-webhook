@@ -104,7 +104,7 @@ func TestReplaceSecManVals_1(t *testing.T) {
 		{map[string]string{"key1": " secman:/second/key1 "}, "/second/key1"},
 		{map[string]string{"key2": "secman: /second/key2 "}, "/second/key2"},
 		{map[string]string{"key3": "secman:/second/key3 "}, "/second/key3"},
-		{map[string]string{"key4": "geheim"}, "geheim"},
+		{map[string]string{"key4": "secman: /project/Bla"}, "/project/Bla"},
 		{map[string]string{"key5": "Secman:/second/key5 "}, "Secman:/second/key5"},
 	} {
 		m.On("GetSecret", ctx, tt.e).Return([]byte("geheim"), nil).Once()

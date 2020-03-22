@@ -20,8 +20,6 @@ func Mutate(ctx context.Context, body []byte, v vault.VaultClient) ([]byte, erro
 
 	log.Debugf("Received Request: %s\n", string(body))
 
-	log.Info("####BODY:_", string(body))
-
 	admReview := v1beta1.AdmissionReview{}
 	if err := json.Unmarshal(body, &admReview); err != nil {
 		log.Errorf("Unmarshaling request failed with %v", err)

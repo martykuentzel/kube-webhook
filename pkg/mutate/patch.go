@@ -46,16 +46,16 @@ func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntri
 
 	for k, v := range secManEntries {
 		secManAddr := removeSecManPrefix(v)
-		log.Infof("Retrieving Secret for secManAddr '%s'", secManAddr)
+		log.Infof("Retrieving Secret for Placeholder '%s'", secManAddr)
 		retrievedSecret, err := vault.GetSecret(ctx, secManAddr)
 
 		patch := map[string]string{}
 		if err != nil {
-			log.Errorf("Because secret cannot be retrieved from SecretManager the secret `%s` will not be muatated", v)
+			log.Errorf("Because secret cannot be retrieved from SecretManager the Placeholder `%s` will not be muatated", v)
 			patch = createPatch(k, []byte(v))
 			pp = append(pp, patch)
 		} else {
-			log.Debugf("Secret with secManAddr %s could be successfully retrieved from Secret Manager", secManAddr)
+			log.Debugf("Secret with Placeholder %s could be successfully retrieved from Secret Manager", secManAddr)
 			patch = createPatch(k, retrievedSecret)
 			pp = append(pp, patch)
 		}
