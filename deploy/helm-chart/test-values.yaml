@@ -1,0 +1,18 @@
+name: kube-secHook
+namespace: kube-secHook
+serviceAccount: kube-secHook
+replicaCount: 2
+
+image: 3236527/k8s-mutate-webhook
+imageTag: latest
+
+service:
+  listenPort: 8443
+
+webhook:
+  caBundle: "blablabla"
+
+workloadIdentity:
+  enabled: true
+  gcpSA: kube-secHook
+  gcpProjectID: "dummy-project"

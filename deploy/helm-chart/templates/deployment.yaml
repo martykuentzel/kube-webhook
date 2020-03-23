@@ -1,57 +1,57 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kube-secman.fullname" . }}
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
   labels:
-{{ include "kube-secman.labels" . | indent 4 }}
+    app: {{ .Values.name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "kube-secman.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app: {{ .Values.name }}
   template:
     metadata:
+      name: {{ .Values.name }}
       labels:
-        app.kubernetes.io/name: {{ include "kube-secman.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app: {{ .Values.name }}
     spec:
-    {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-      serviceAccountName: {{ template "kube-secman.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.serviceAccount }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+      - name: mutator
+        image: {{ .Values.image }}:{{ .Values.imageTag }}
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 100m
+            memory: 32Mi
+          requests:
+            cpu: 50m
+            memory: 16Mi
+        volumeMounts:
+        - mountPath: /app/ssl
+        name: ssl
+        readOnly: true
+{{- if not .Values.workloadIdentity.enabled }}
+        - mountPath: /secret
+          name: secret
+          readOnly: true
+  {{- end }}
+      volumes:
+      - name: ssl
+        secret:
+          secretName: {{ .Values.name }}
+          items:
+            - key: "tls.crt"
+              path: "kube-secHook.pem"
+            - key: "tls.key"
+              path: "kube-secHook.key"
+{{- if not .Values.workloadIdentity.enabled }}
+      - name: secret
+        secret:
+          secretName: {{ .Values.name }}
+          items:
+            - key: "gcp-sa.json"
+              path: "gcp-sa.json"
+{{- end }}

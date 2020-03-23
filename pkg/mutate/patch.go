@@ -14,17 +14,17 @@ import (
 // the actual mutation is done by a string in JSONPatch style
 func patchSecrets(ctx context.Context, secret *corev1.Secret, v vault.VaultClient) []map[string]string {
 
-	secManEntries := findAllSecManEntries(secret.Data)
-	patch := replaceSecManVals(ctx, v, secManEntries)
+	secHookEntries := findAllSecHookEntries(secret.Data)
+	patch := replaceSecHookVals(ctx, v, secHookEntries)
 	log.Debugf("Created following patch: %v", patch)
 	return patch
 }
 
-func findAllSecManEntries(secretContent map[string][]byte) map[string]string {
+func findAllSecHookEntries(secretContent map[string][]byte) map[string]string {
 
 	ss := map[string]string{}
 	for k, v := range secretContent {
-		if hasSecManPrefix(string(v)) {
+		if hasSecHookPrefix(string(v)) {
 			log.Debugf("key: %s, value: %s found", k, v)
 			ss[k] = string(v)
 		}
@@ -32,23 +32,23 @@ func findAllSecManEntries(secretContent map[string][]byte) map[string]string {
 	return ss
 }
 
-func hasSecManPrefix(s string) bool {
+func hasSecHookPrefix(s string) bool {
 	s1 := strings.TrimSpace(s)
-	if strings.HasPrefix(s1, "secman:") {
+	if strings.HasPrefix(s1, "secHook:") {
 		return true
 	}
 	return false
 }
 
-// Placeholder called 'secManAddr' will be replaced with secret, if the value points to an actual key
-func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntries map[string]string) []map[string]string {
+// Placeholder called 'secHookAddr' will be replaced with secret, if the value points to an actual key
+func replaceSecHookVals(ctx context.Context, vault vault.VaultClient, secHookEntries map[string]string) []map[string]string {
 
 	pp := []map[string]string{}
 
-	for k, v := range secManEntries {
-		secManAddr := removeSecManPrefix(v)
-		log.Infof("Retrieving Secret for Placeholder: '%s'", secManAddr)
-		retrievedSecret, err := vault.GetSecret(ctx, secManAddr)
+	for k, v := range secHookEntries {
+		secHookAddr := removeSecHookPrefix(v)
+		log.Infof("Retrieving Secret for Placeholder: '%s'", secHookAddr)
+		retrievedSecret, err := vault.GetSecret(ctx, secHookAddr)
 
 		patch := map[string]string{}
 		if err != nil {
@@ -56,7 +56,7 @@ func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntri
 			patch = createPatch(k, []byte(v))
 			pp = append(pp, patch)
 		} else {
-			log.Debugf("Secret with Placeholder %s could be successfully retrieved from Secret Manager", secManAddr)
+			log.Debugf("Secret with Placeholder %s could be successfully retrieved from Secret Manager", secHookAddr)
 			patch = createPatch(k, retrievedSecret)
 			pp = append(pp, patch)
 		}
@@ -64,11 +64,11 @@ func replaceSecManVals(ctx context.Context, vault vault.VaultClient, secManEntri
 	return pp
 }
 
-func removeSecManPrefix(secretValueRaw string) string {
+func removeSecHookPrefix(secretValueRaw string) string {
 	s1 := strings.TrimSpace(secretValueRaw)
-	s2 := strings.TrimPrefix(s1, "secman:")
-	secManAddr := strings.TrimSpace(s2)
-	return secManAddr
+	s2 := strings.TrimPrefix(s1, "secHook:")
+	secHookAddr := strings.TrimSpace(s2)
+	return secHookAddr
 }
 
 func createPatch(secretKey string, secretValue []byte) map[string]string {

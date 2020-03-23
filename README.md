@@ -8,7 +8,7 @@ A Webhook that connects to SecretManager and mutates secrets.
 
 - enable KMS API
 - enable Secret Manager API
-- create Service Account for SecMan
+- create Service Account for secHook
 - give Service Account Secret Manager Secret Accessor Role
 - make sure your Kubernetes Cluster has Workload Identity enabled
 - create IAM Binding for GCP Service Account and K8S Service Account

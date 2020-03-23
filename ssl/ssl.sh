@@ -1,8 +1,8 @@
 #!/bin/bash
 set -o errexit
 
-export APP="${1:-mutateme}"
-export NAMESPACE="${2:-default}"
+export APP="${1:-kube-secHook}"
+export NAMESPACE="${2:-kube-secHook}"
 export CSR_NAME="${APP}.${NAMESPACE}.svc"
 
 echo "... creating ${APP}.key"

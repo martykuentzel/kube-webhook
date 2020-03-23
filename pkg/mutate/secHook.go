@@ -13,7 +13,7 @@ type SecHook struct {
 	Vault vault.VaultClient
 }
 
-//HandleMutate takes care of request by reading body in passing it to the Mutate Function
+//HandleMutate takes care of request by reading body and passing it to the Mutate Function
 func (secHook *SecHook) HandleMutate(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Start mutating ...")

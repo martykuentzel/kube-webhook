@@ -1,0 +1,29 @@
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+webhooks:
+  - name: {{ .Values.name }}.{{ .Values.namespace }}.svc
+    clientConfig:
+{{- if .Values.webhook.caBundle }}
+      caBundle: {{ .Values.webhook.caBundle }}
+{{- end }}
+      service:
+        name: {{ .Values.name }}
+        namespace: {{ .Values.namespace }}
+        path: "/mutate"
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["secrets"]
+      - operations: ["UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["secrets"]
+    namespaceSelector:
+      matchLabels:
+        kube-secHook: enabled
