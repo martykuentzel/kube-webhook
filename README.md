@@ -23,19 +23,19 @@ gcloud iam service-accounts add-iam-policy-binding \
 #### Activation in Kubernetes
 To enable the Webhook to listen for changes in your Namespace, you have to label the namespace
 ```
-kubectl label namespace YOUR_NAMESPACE kube-secHook=enabled
+kubectl label namespace YOUR_NAMESPACE kube-sechook=enabled
 ```
 
 ## How it works
 
-Create a secret with prefix "secHook:" and the address of the secret in Secret Manager
-`/project/PROJECT_ID/secrets/SECRETNAME/versions/VERSIONNUMBER`
+Create a secret with prefix "gsm://" and the address of the secret in Secret Manager
+`gsm://project/PROJECT_ID/secrets/SECRETNAME/versions/VERSIONNUMBER`
 
 Example:
 ```
-echo -n 'secHook:projects/dummy-playground/secrets/tester/versions/latest' | base64
+echo -n 'gsm://projects/dummy-playground/secrets/tester/versions/latest' | base64
 ```
-Use the base64 Output in the secret Yaml. By omitting the 'secHook:' prefix you can also combine your secret with regular secrets.
+Use the base64 Output in the secret Yaml. By omitting the 'gsm://' prefix you can also combine your secret with regular secrets.
 
 ```
 apiVersion: v1
@@ -44,8 +44,8 @@ metadata:
   name: mysecret
 type: Opaque
 data:
-  mutatedPassword: c2VjSG9vazpwcm9qZWN0cy9kdW1teS1wbGF5Z3JvdW5kL3NlY3JldHMvdGVzdGVyL3ZlcnNpb25zL2xhdGVzdA==
+  mutatedPassword: Z3NtOi8vcHJvamVjdHMvZHVtbXktcGxheWdyb3VuZC9zZWNyZXRzL3Rlc3Rlci92ZXJzaW9ucy9sYXRlc3Q=
   nonMutatedPassword: cGFzc3dvcmQ= # regular password
 ```
 
->Note: In case the secret cannot be found in Secret Manager (because it does not exsists or permission issues) the affected key:value of that secret will not be mutated and remains unchanged. In the future a validation Hook is planned, that runs a validation
+>Note: In case the secret cannot be found in Secret Manager (because it does not exists or permission issues) the affected key:value of that secret will not be mutated and remains unchanged. In the future a validation Hook is planned, that runs a validation

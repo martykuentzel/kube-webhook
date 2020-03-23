@@ -26,4 +26,4 @@ webhooks:
         resources: ["secrets"]
     namespaceSelector:
       matchLabels:
-        kube-secHook: enabled
+        kube-sechook: enabled

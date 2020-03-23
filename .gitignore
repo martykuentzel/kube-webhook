@@ -3,3 +3,7 @@ ssl/*.pem
 ssl/*.csr
 /mutateme
 skaffold.yaml
+secret.yaml
+secret-test-mg.yaml
+test
+deply/test-values.yaml

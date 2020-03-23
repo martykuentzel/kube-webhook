@@ -34,7 +34,7 @@ func findAllSecHookEntries(secretContent map[string][]byte) map[string]string {
 
 func hasSecHookPrefix(s string) bool {
 	s1 := strings.TrimSpace(s)
-	if strings.HasPrefix(s1, "secHook:") {
+	if strings.HasPrefix(s1, "gsm://") {
 		return true
 	}
 	return false
@@ -66,7 +66,7 @@ func replaceSecHookVals(ctx context.Context, vault vault.VaultClient, secHookEnt
 
 func removeSecHookPrefix(secretValueRaw string) string {
 	s1 := strings.TrimSpace(secretValueRaw)
-	s2 := strings.TrimPrefix(s1, "secHook:")
+	s2 := strings.TrimPrefix(s1, "gsm://")
 	secHookAddr := strings.TrimSpace(s2)
 	return secHookAddr
 }

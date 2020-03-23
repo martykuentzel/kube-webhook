@@ -31,8 +31,8 @@ spec:
             memory: 16Mi
         volumeMounts:
         - mountPath: /app/ssl
-        name: ssl
-        readOnly: true
+          name: ssl
+          readOnly: true
 {{- if not .Values.workloadIdentity.enabled }}
         - mountPath: /secret
           name: secret
@@ -43,7 +43,7 @@ spec:
         secret:
           secretName: {{ .Values.name }}
           items:
-            - key: "tls.crt"
+            - key: "tls.pem"
               path: "kube-secHook.pem"
             - key: "tls.key"
               path: "kube-secHook.key"

@@ -21,10 +21,10 @@ func TestPatchSecrets(t *testing.T) {
 	secret := corev1.Secret{
 		Data: map[string][]byte{
 			"dnt_mutate": []byte{100, 111, 32, 110, 111, 116, 32, 109, 117, 116, 97, 116, 101, 32, 116, 104, 105, 115, 32, 107, 101, 121},
-			"mutate":     []byte{115, 101, 99, 72, 111, 111, 107, 58, 112, 114, 111, 106, 101, 99, 116, 115, 47, 55, 55, 54, 50, 52, 49, 54, 56, 48, 51, 52, 48, 47, 115, 101, 99, 114, 101, 116, 115, 47, 116, 101, 115, 116, 101, 114, 47, 118, 101, 114, 115, 105, 111, 110, 115, 47, 108, 97, 116, 101, 115, 116, 10},
-			"mutate1":    []byte{115, 101, 99, 72, 111, 111, 107, 58, 116, 104, 105, 115, 32, 105, 115, 32, 116, 104, 101, 32, 102, 97, 107, 101, 32, 115, 101, 99, 114, 101, 116},
-			"mutate3":    []byte{115, 101, 99, 72, 111, 111, 107, 58, 112, 114, 111, 106, 101, 99, 116, 115, 47, 112, 108, 97, 121, 103, 114, 111, 117, 110, 100, 45, 109, 97, 114, 116, 121, 45, 107, 117, 101, 110, 116, 122, 101, 108, 47, 115, 101, 99, 114, 101, 116, 115, 47, 98, 108, 97, 98, 108, 97, 47, 118, 101, 114, 115, 105, 111, 110, 115, 47, 108, 97, 116, 101, 115, 116, 10},
-			"mutate4":    []byte(" secHook: /project/34343/bla/latest"),
+			"mutate":     []byte{103, 115, 109, 58, 47, 47, 112, 114, 111, 106, 101, 99, 116, 115, 47, 55, 55, 54, 50, 52, 49, 54, 56, 48, 51, 52, 48, 47, 115, 101, 99, 114, 101, 116, 115, 47, 116, 101, 115, 116, 101, 114, 47, 118, 101, 114, 115, 105, 111, 110, 115, 47, 108, 97, 116, 101, 115, 116, 10},
+			"mutate1":    []byte{103, 115, 109, 58, 47, 47, 116, 104, 105, 115, 32, 105, 115, 32, 116, 104, 101, 32, 102, 97, 107, 101, 32, 115, 101, 99, 114, 101, 116},
+			"mutate3":    []byte{103, 115, 109, 58, 47, 47, 112, 114, 111, 106, 101, 99, 116, 115, 47, 112, 108, 97, 121, 103, 114, 111, 117, 110, 100, 45, 109, 97, 114, 116, 121, 45, 107, 117, 101, 110, 116, 122, 101, 108, 47, 115, 101, 99, 114, 101, 116, 115, 47, 98, 108, 97, 98, 108, 97, 47, 118, 101, 114, 115, 105, 111, 110, 115, 47, 108, 97, 116, 101, 115, 116, 10},
+			"mutate4":    []byte(" gsm://project/34343/bla/latest"),
 		},
 	}
 	var dumySecret *corev1.Secret = &secret
@@ -52,9 +52,9 @@ func TestFindAllSecHookEntries(t *testing.T) {
 		n        map[string][]byte // input
 		expected map[string]string // expected result
 	}{
-		{map[string][]byte{"key1": []byte("secHook: /first/key"), "key2": []byte("secretPassword")}, map[string]string{"key1": "secHook: /first/key"}},
-		{map[string][]byte{"key1": []byte("secHook/first/key"), "key2": []byte("secretPassword"), "key3": []byte("SecHook:/project/bla")}, map[string]string{}},
-		{map[string][]byte{"key1": []byte(" secHook: /first/key"), "key2": []byte(" secHook:/second/key ")}, map[string]string{"key1": " secHook: /first/key", "key2": " secHook:/second/key "}},
+		{map[string][]byte{"key1": []byte("gsm://first/key"), "key2": []byte("secretPassword")}, map[string]string{"key1": "gsm://first/key"}},
+		{map[string][]byte{"key1": []byte("Gsm:// first/key"), "key2": []byte("secretPassword"), "key3": []byte("gsm:/project/bla")}, map[string]string{}},
+		{map[string][]byte{"key1": []byte(" gsm:// first/key"), "key2": []byte(" gsm://second/key ")}, map[string]string{"key1": " gsm:// first/key", "key2": " gsm://second/key "}},
 	} {
 
 		actual := findAllSecHookEntries(tt.n)
@@ -69,15 +69,15 @@ func TestHasSecHookPrefixt(t *testing.T) {
 		n        string // input
 		expected bool   // expected result
 	}{
-		{"secHook:/abc", true},
-		{"SecHook: /abc", false},
-		{"SecHook:/abc", false},
-		{" secHook:/abc", true},
-		{" secHook: /abc ", true},
-		{" SECHook: /abc", false},
-		{"secHook/abc", false},
+		{"gsm://abc", true},
+		{"gsm: //abc", false},
+		{"Gsm://abc", false},
+		{" gsm://abc", true},
+		{" gsm:// abc ", true},
+		{" gsm//abc", false},
+		{"GSM://abc", false},
 		{"secbla: /abc", false},
-		{"sechook: /abc", false},
+		{"gsm:/abc", false},
 	} {
 		actual := hasSecHookPrefix(tt.n)
 		assert.Equal(tt.expected, actual, "The Prefix '%s' two Booleans should be tested %t.", tt.n, tt.expected)
@@ -93,11 +93,11 @@ func TestReplaceSecHookVals_1(t *testing.T) {
 		n map[string]string // input replaceSecHookVals
 		e string            // expected
 	}{
-		{map[string]string{"key1": " secHook:/second/key1 "}, "/second/key1"},
-		{map[string]string{"key2": "secHook: /second/key2 "}, "/second/key2"},
-		{map[string]string{"key3": "secHook:/second/key3 "}, "/second/key3"},
-		{map[string]string{"key4": "secHook: /project/Bla"}, "/project/Bla"},
-		{map[string]string{"key5": "SecHook:/second/key5 "}, "SecHook:/second/key5"},
+		{map[string]string{"key1": " gsm://second/key1 "}, "second/key1"},
+		{map[string]string{"key2": "gsm:// second/key2 "}, "second/key2"},
+		{map[string]string{"key3": "gsm://second/key3 "}, "second/key3"},
+		{map[string]string{"key4": "gsm:// project/Bla"}, "project/Bla"},
+		{map[string]string{"key5": "gsm: //second/key5 "}, "gsm: //second/key5"},
 	} {
 		m.On("GetSecret", ctx, tt.e).Return([]byte("geheim"), nil).Once()
 		replaceSecHookVals(ctx, m, tt.n)
@@ -119,15 +119,15 @@ func TestReplaceSecHookVals_2(t *testing.T) {
 		err      error               // error of GetSecret
 		expected []map[string]string // expected result
 	}{
-		{map[string]string{"key1": "secHook:/first/key", "key2": " secHook:/second/key "}, // input replaceSecHookVals
+		{map[string]string{"key1": "gsm://first/key", "key2": " gsm://second/key "}, // input replaceSecHookVals
 			nil, // error of GetSecret
 			[]map[string]string([]map[string]string{map[string]string{"op": "replace", "path": "/data/key1", "value": "YmxhYmxh"}, // expected result
 				map[string]string{"op": "replace", "path": "/data/key2", "value": "YmxhYmxh"}})},
 
-		{map[string]string{"key1": "secHook:/first/key", "key2": " secHook:/second/key "}, // input replaceSecHookVals
+		{map[string]string{"key1": "gsm://first/key", "key2": " gsm://second/key "}, // input replaceSecHookVals
 			errors.New("Some Error"), // error of GetSecret
-			[]map[string]string([]map[string]string{map[string]string{"op": "replace", "path": "/data/key1", "value": "c2VjSG9vazovZmlyc3Qva2V5"}, // expected result
-				map[string]string{"op": "replace", "path": "/data/key2", "value": "IHNlY0hvb2s6L3NlY29uZC9rZXkg"}})},
+			[]map[string]string([]map[string]string{map[string]string{"op": "replace", "path": "/data/key1", "value": "Z3NtOi8vZmlyc3Qva2V5"}, // expected result
+				map[string]string{"op": "replace", "path": "/data/key2", "value": "IGdzbTovL3NlY29uZC9rZXkg"}})},
 	} {
 		m.On("GetSecret", ctx, mock.AnythingOfType("string")).Return(retrievedSecret, tt.err).Times(len(tt.n))
 		actual := replaceSecHookVals(ctx, m, tt.n)
@@ -144,17 +144,17 @@ func TestRemoveSecHookPrefix(t *testing.T) {
 		n        string // input
 		expected string // expected result
 	}{
-		{"secHook:/project/3423443/secrets/test/latest\n", "/project/3423443/secrets/test/latest"},
-		{"secHook: /project/3423443/secrets/test/2\n", "/project/3423443/secrets/test/2"},
-		{" secHook:/project/3423443/secrets/test/3", "/project/3423443/secrets/test/3"},
-		{"secHook:  /project/3423443/secrets/test/4\n\n", "/project/3423443/secrets/test/4"},
-		{"secHook:/project/3423443/secrets/test/5 ", "/project/3423443/secrets/test/5"},
-		{"secHook: /project/3423443/secrets/test/6 \n", "/project/3423443/secrets/test/6"},
-		{"secHook:/project/3423443/secrets/test/7\n ", "/project/3423443/secrets/test/7"},
-		{"secHook:\t /project/3423443/secrets/test/7\n ", "/project/3423443/secrets/test/7"},
-		{"secHook:/project/3423443/secrets/test/7\n \t", "/project/3423443/secrets/test/7"},
-		{"secHook: ", ""},
-		{"secHook:", ""},
+		{"gsm://project/3423443/secrets/test/latest\n", "project/3423443/secrets/test/latest"},
+		{"gsm://project/3423443/secrets/test/2\n", "project/3423443/secrets/test/2"},
+		{" gsm://project/3423443/secrets/test/3", "project/3423443/secrets/test/3"},
+		{"gsm://project/3423443/secrets/test/4\n\n", "project/3423443/secrets/test/4"},
+		{"gsm://project/3423443/secrets/test/5 ", "project/3423443/secrets/test/5"},
+		{"gsm:// project/3423443/secrets/test/6 \n", "project/3423443/secrets/test/6"},
+		{"gsm://project/3423443/secrets/test/7\n ", "project/3423443/secrets/test/7"},
+		{"gsm://project/3423443/secrets/test/7\n ", "project/3423443/secrets/test/7"},
+		{"gsm://project/3423443/secrets/test/7\n \t", "project/3423443/secrets/test/7"},
+		{"gsm:// ", ""},
+		{"gsm://", ""},
 	} {
 		actual := removeSecHookPrefix(tt.n)
 		assert.Equal(tt.expected, actual, "The two strings should be the same.")
@@ -187,7 +187,7 @@ func TestCreatePatch(t *testing.T) {
 		{"mutate", []byte("s€cr€T_Pa$$Word"), map[string]string{"op": "replace", "path": "/data/mutate", "value": "c+KCrGNy4oKsVF9QYSQkV29yZA=="}},
 		{"mutate1", []byte(fakeSaCredentials), map[string]string{"op": "replace", "path": "/data/mutate1", "value": base64FakeCreds}},
 		{"mutate2", []byte("3j i4j 934j 34 j3 K9 L0 j$ k3 w4 3r"), map[string]string{"op": "replace", "path": "/data/mutate2", "value": "M2ogaTRqIDkzNGogMzQgajMgSzkgTDAgaiQgazMgdzQgM3I="}},
-		{"failedMuation", []byte("secHook: /project/3423443/secrets/test/7"), map[string]string{"op": "replace", "path": "/data/failedMuation", "value": "c2VjSG9vazogL3Byb2plY3QvMzQyMzQ0My9zZWNyZXRzL3Rlc3QvNw=="}},
+		{"failedMuation", []byte("gsm:// project/3423443/secrets/test/7"), map[string]string{"op": "replace", "path": "/data/failedMuation", "value": "Z3NtOi8vIHByb2plY3QvMzQyMzQ0My9zZWNyZXRzL3Rlc3QvNw=="}},
 	} {
 		actual := createPatch(tt.secretKey, tt.secretValue)
 		actualDecoded, _ := base64.StdEncoding.DecodeString(actual["value"])

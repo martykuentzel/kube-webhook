@@ -67,7 +67,7 @@ func admResponse(JSONPatch []byte, UID types.UID) v1beta1.AdmissionResponse {
 		UID:              UID,
 		PatchType:        &pT,
 		Patch:            JSONPatch,
-		AuditAnnotations: map[string]string{"kube-secHook": "mutated"},
+		AuditAnnotations: map[string]string{"kube-sechook": "mutated"},
 		Result:           &metav1.Status{Status: "Success"},
 	}
 	log.Debug("Admission Response successfully created")

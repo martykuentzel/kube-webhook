@@ -33,5 +33,5 @@ func main() {
 	}
 
 	log.Infof("Listening on port: %s", s.Addr)
-	log.Fatal(s.ListenAndServeTLS("./ssl/mutateme.pem", "./ssl/mutateme.key"))
+	log.Fatal(s.ListenAndServeTLS("./ssl/kube-secHook.pem", "./ssl/kube-secHook.key"))
 }
