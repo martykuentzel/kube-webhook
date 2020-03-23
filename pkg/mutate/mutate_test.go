@@ -69,7 +69,7 @@ func TestMutateJSON(t *testing.T) {
 
 	m.On("GetSecret", ctx, mock.AnythingOfType("string")).Return(retrievedSecret, nil).Times(3)
 
-	response, err := Mutate(ctx, []byte(rawJSON), m)
+	response, err := mutate(ctx, []byte(rawJSON), m)
 	if err != nil {
 		t.Errorf("failed to mutate AdmissionRequest %s with error %s", string(response), err)
 	}
@@ -78,6 +78,7 @@ func TestMutateJSON(t *testing.T) {
 	err = json.Unmarshal(response, &r)
 	assert.NoError(t, err, "failed to unmarshal with error %s", err)
 
+	// TODO: Flackering Test fixen
 	rr := r.Response
 	actual := string(rr.Patch)
 	expected := `[{"op":"replace","path":"/data/mutate","value":"YmxhYmxh"},{"op":"replace","path":"/data/mutate1","value":"YmxhYmxh"},{"op":"replace","path":"/data/mutate3","value":"YmxhYmxh"}]`

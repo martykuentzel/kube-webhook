@@ -16,7 +16,7 @@ import (
 )
 
 // Mutate receives AdmissionReview and responds with mutated AdmissionReview
-func Mutate(ctx context.Context, body []byte, v vault.VaultClient) ([]byte, error) {
+func mutate(ctx context.Context, body []byte, vault vault.VaultClient) ([]byte, error) {
 
 	log.Debugf("Received Request: %s\n", string(body))
 
@@ -38,7 +38,7 @@ func Mutate(ctx context.Context, body []byte, v vault.VaultClient) ([]byte, erro
 		return nil, err
 	}
 
-	patch := patchSecrets(ctx, secret, v)
+	patch := patchSecrets(ctx, secret, vault)
 	JSONPatch, err := json.Marshal(patch)
 	if err != nil {
 		log.Errorf("Cannot parse secret patch []map into Json: %v", err)

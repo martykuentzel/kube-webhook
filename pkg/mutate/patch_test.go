@@ -11,15 +11,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type mockSecretManager struct {
-	mock.Mock
-}
-
-func (m *mockSecretManager) GetSecret(ctx context.Context, secHookAddr string) ([]byte, error) {
-	args := m.Called(ctx, secHookAddr)
-	return args.Get(0).([]byte), args.Error(1)
-}
-
 func TestPatchSecrets(t *testing.T) {
 
 	assert := assert.New(t)

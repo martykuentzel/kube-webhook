@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"context"
 	"net/http"
 	"time"
 
@@ -10,49 +10,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func handleMutate(w http.ResponseWriter, r *http.Request) {
-
-	log.Info("Start mutating ...")
-
-	// read the body / request
-	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		log.Errorf("Cannot retrieve the body of the AdmissionReview request.%v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// mutate the request with vault client
-	vault, err := vault.New(r.Context())
-	if err != nil {
-		log.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	mutated, err := mutate.Mutate(r.Context(), body, vault)
-	if err != nil {
-		log.Errorf("Mutation failed.\n%v.", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// and write it back
-	w.WriteHeader(http.StatusOK)
-	w.Write(mutated)
-
-	log.Debug("...Mutation over.")
-}
-
 func main() {
 
+	// TODO introduce Flags
 	log.SetLevel(log.InfoLevel)
 	log.SetFormatter(&log.JSONFormatter{})
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/mutate", handleMutate)
+	// TODO: ctx recherieren
+	ctx := context.Background()
+	secHook := &mutate.SecHook{Vault: vault.New(ctx)}
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/mutate", secHook.HandleMutate)
+
+	//TODO: best practice http Server (go fucntions)
 	s := &http.Server{
 		Addr:           ":8443",
 		Handler:        mux,

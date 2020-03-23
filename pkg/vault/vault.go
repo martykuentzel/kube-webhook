@@ -2,7 +2,6 @@ package vault
 
 import (
 	"context"
-	"errors"
 
 	secretmanagerSDK "cloud.google.com/go/secretmanager/apiv1beta1"
 	log "github.com/sirupsen/logrus"
@@ -37,16 +36,15 @@ func (sM secretManager) GetSecret(ctx context.Context, secHookAddr string) ([]by
 }
 
 // New initializes VaultClient
-func New(ctx context.Context) (VaultClient, error) {
+func New(ctx context.Context) VaultClient {
 
 	// Create the client.
 	client, err := secretmanagerSDK.NewClient(ctx)
 	if err != nil {
-		log.Errorf("Failed to create secretmanager client: %v", err)
-		return nil, errors.New("Failed to initialize vault client.")
+		log.Fatalf("Failed to create Secretmanager Client: %v", err)
 	}
 
 	return &secretManager{
 		client: client,
-	}, err
+	}
 }
