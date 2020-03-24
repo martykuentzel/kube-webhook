@@ -1,4 +1,4 @@
-module github.com/MartyKuentzel/kube-webhook
+module github.com/martykuentzel/kube-webhook
 
 go 1.12
 

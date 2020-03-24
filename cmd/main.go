@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/MartyKuentzel/kube-webhook/pkg/mutate"
-	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
+	"github.com/martykuentzel/kube-webhook/pkg/mutate"
+	"github.com/martykuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
 )
 

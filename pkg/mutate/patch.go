@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
+	"github.com/martykuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/MartyKuentzel/kube-webhook/pkg/vault"
+	"github.com/martykuentzel/kube-webhook/pkg/vault"
 	log "github.com/sirupsen/logrus"
 	v1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
